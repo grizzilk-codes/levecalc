@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FFXIV Leve Calculator</title>
+    <style>
+        /* Theme variables */
+        html[data-theme="dark"] {
+            --bg-color: #1a1a1a;
+            --container-bg: #2d2d2d;
+            --text-color: #e1e1e1;
+            --heading-color: #fff;
+            --input-bg: #1a1a1a;
+            --input-border: #404040;
+            --input-text: #fff;
+            --button-bg: #0066cc;
+            --button-hover: #0052a3;
+            --result-bg: #232323;
+            --border-color: #404040;
+            --value-color: #66b3ff;
+        }
+
+        html[data-theme="light"] {
+            --bg-color: #f5f5f5;
+            --container-bg: #ffffff;
+            --text-color: #333333;
+            --heading-color: #2c3e50;
+            --input-bg: #ffffff;
+            --input-border: #ddd;
+            --input-text: #333333;
+            --button-bg: #0066cc;
+            --button-hover: #0052a3;
+            --result-bg: #f8f9fa;
+            --border-color: #ddd;
+            --value-color: #0066cc;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            transition: background-color 0.3s, color 0.3s;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        h1 {
+            text-align: center;
+            color: var(--heading-color);
+            margin-bottom: 40px;
+            font-size: 2.5em;
+        }
+
+        .container {
+            background-color: var(--container-bg);
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+            margin-bottom: 40px;
+            flex: 1;
+        }
+
+        .form-group {
+            margin-bottom: 30px;
+            display: grid;
+            grid-template-columns: 200px 1fr;
+            align-items: center;
+            gap: 20px;
+        }
+
+        label {
+            font-weight: bold;
+            color: var(--text-color);
+            font-size: 1.1em;
+        }
+
+        input[type="number"] {
+            width: 200px;
+            padding: 12px 16px;
+            border: 2px solid var(--input-border);
+            border-radius: 6px;
+            font-size: 1.1em;
+            transition: all 0.3s ease;
+            background-color: var(--input-bg);
+            color: var(--input-text);
+        }
+
+        input[type="number"]:focus {
+            border-color: var(--button-bg);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.2);
+        }
+
+        .button-container {
+            margin-top: 40px;
+            text-align: center;
+        }
+
+        button:not(.theme-toggle) {
+            background-color: var(--button-bg);
+            color: white;
+            border: none;
+            padding: 14px 30px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1.1em;
+            transition: all 0.3s ease;
+            min-width: 200px;
+        }
+
+        button:not(.theme-toggle):hover {
+            background-color: var(--button-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        #result {
+            margin-top: 40px;
+            padding: 30px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            display: none;
+            background-color: var(--result-bg);
+        }
+
+        #result h2 {
+            margin-top: 0;
+            margin-bottom: 25px;
+            color: var(--heading-color);
+            font-size: 1.5em;
+            text-align: center;
+        }
+
+        .result-row {
+            display: grid;
+            grid-template-columns: 200px 1fr;
+            gap: 20px;
+            margin-bottom: 15px;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border-color);
+            align-items: center;
+        }
+
+        .result-row:last-child {
+            border-bottom: none;
+        }
+
+        .result-label {
+            font-weight: bold;
+            color: var(--text-color);
+        }
+
+        .result-value {
+            color: var(--value-color);
+            font-size: 1.1em;
+        }
+
+        .error {
+            color: #ff6b6b;
+            display: none;
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 6px;
+            background-color: rgba(255, 107, 107, 0.1);
+            border: 1px solid rgba(255, 107, 107, 0.3);
+            text-align: center;
+        }
+
+        footer {
+            text-align: center;
+            padding: 20px 0;
+            color: var(--text-color);
+            opacity: 0.8;
+            font-size: 0.9em;
+            margin-top: auto;
+        }
+
+        /* Theme Toggle Button */
+        .theme-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 12px;
+            border-radius: 50%;
+            width: 46px;
+            height: 46px;
+            background-color: var(--container-bg);
+            border: 2px solid var(--input-border);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .theme-toggle:hover {
+            background-color: var(--button-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .theme-toggle i {
+            font-size: 20px;
+            color: var(--text-color);
+        }
+
+        /* Remove number input spinners */
+        input[type="number"]::-webkit-inner-spin-button,
+        input[type="number"]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        input[type="number"] {
+            -moz-appearance: textfield;
+        }
+
+        .social-links {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin: 15px 0;
+        }
+
+        .social-links a {
+            color: var(--text-color);
+            font-size: 24px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            opacity: 0.8;
+            display: flex;
+            align-items: center;
+        }
+
+        .social-links a:hover {
+            opacity: 1;
+            transform: translateY(-2px);
+        }
+
+        .bsky-icon {
+            width: 24px;
+            height: 24px;
+        }
+
+        /* Different colors on hover */
+        .social-links a:hover .fa-github {
+            color: #fff;
+        }
+
+        .social-links a:hover .bsky-icon {
+            color: #0085ff;
+        }
+
+        .social-links a:hover .fa-coffee {
+            color: #ff5e5b;
+        }
+
+        .social-links a:hover .fa-patreon {
+            color: #ff424d;
+        }
+    </style>
+    <!-- Add Font Awesome for theme toggle icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <button class="theme-toggle" onclick="toggleTheme()">
+        <i class="fas fa-sun"></i>
+    </button>
+
+    <h1>FFXIV Leve Calculator</h1>
+    
+    <div class="container">
+        <div class="form-group">
+            <label for="current">Current Leves:</label>
+            <input type="number" id="current" min="0" max="100" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="final">Target Leves:</label>
+            <input type="number" id="final" min="0" max="100" placeholder="Default: 100">
+        </div>
+
+        <div class="button-container">
+            <button onclick="calculateLeves()">Calculate</button>
+        </div>
+        
+        <div id="error" class="error"></div>
+        <div id="result"></div>
+    </div>
+
+    <footer>
+        <p>Created by Oliver Westbrooke(Goblin) for the FFXIV community.</p>
+        <div class="social-links">
+            <a href="https://github.com/your-repo-here" target="_blank" rel="noopener noreferrer" title="View source on GitHub">
+                <i class="fab fa-github"></i>
+            </a>
+            <a href="https://bsky.app/profile/grizzilk.bsky.social" target="_blank" rel="noopener noreferrer" title="Follow on Bluesky">
+                <svg class="bsky-icon" viewBox="0 0 288 288" fill="currentColor">
+                    <path d="M267.528 0H20.472C9.1637 0 0 9.1637 0 20.472V267.528C0 278.836 9.1637 288 20.472 288H267.528C278.836 288 288 278.836 288 267.528V20.472C288 9.1637 278.836 0 267.528 0ZM146.037 60C146.037 60 190.769 60 212.342 81.5726C233.915 103.145 233.915 147.877 233.915 147.877C233.915 147.877 233.915 192.609 212.342 214.182C190.769 235.755 146.037 235.755 146.037 235.755C146.037 235.755 101.306 235.755 79.7326 214.182C58.1593 192.609 58.1593 147.877 58.1593 147.877C58.1593 147.877 58.1593 103.145 79.7326 81.5726C101.306 60 146.037 60 146.037 60Z"/>
+                </svg>
+            </a>
+            <a href="#" target="_blank" rel="noopener noreferrer" title="Support on Ko-fi">
+                <i class="fas fa-coffee"></i>
+            </a>
+            <a href="#" target="_blank" rel="noopener noreferrer" title="Support on Patreon">
+                <i class="fab fa-patreon"></i>
+            </a>
+        </div>
+        <p>FINAL FANTASY XIV © 2010 - 2024 SQUARE ENIX CO., LTD.<br>
+        FINAL FANTASY is a registered trademark of Square Enix Holdings Co., Ltd.<br>
+        All materials used under license.</p>
+    </footer>
+
+    <script>
+        function calculateLeves() {
+            const current = parseInt(document.getElementById('current').value);
+            let final = parseInt(document.getElementById('final').value);
+            const errorDiv = document.getElementById('error');
+            const resultDiv = document.getElementById('result');
+            
+            // Reset displays
+            errorDiv.style.display = 'none';
+            resultDiv.style.display = 'none';
+
+            // Validation
+            if (isNaN(current)) {
+                errorDiv.textContent = "Please provide a valid current leve count.";
+                errorDiv.style.display = 'block';
+                return;
+            }
+
+            // Set default final value to 100 if not specified
+            if (isNaN(final)) {
+                final = 100;
+            }
+
+            if (current < 0 || current > 100 || final < 0 || final > 100) {
+                errorDiv.textContent = "Please provide valid leve counts between 0 and 100.";
+                errorDiv.style.display = 'block';
+                return;
+            }
+
+            if (current >= final) {
+                errorDiv.textContent = "You've already reached or exceeded your target leve count!";
+                errorDiv.style.display = 'block';
+                return;
+            }
+
+            const levesNeeded = final - current;
+            const cyclesNeeded = Math.ceil(levesNeeded / 3);
+            
+            // Calculate next leve time in UTC
+            const now = new Date();
+            const utcNow = new Date(now.toUTCString());
+            let nextLeveTime = new Date(utcNow);
+            nextLeveTime.setUTCMinutes(0);
+            nextLeveTime.setUTCSeconds(0);
+            nextLeveTime.setUTCMilliseconds(0);
+            
+            // Set to next 00:00 or 12:00 UTC
+            const currentUTCHour = utcNow.getUTCHours();
+            if (currentUTCHour < 0) {
+                nextLeveTime.setUTCHours(0);
+            } else if (currentUTCHour < 12) {
+                nextLeveTime.setUTCHours(12);
+            } else {
+                nextLeveTime.setUTCHours(24);
+            }
+
+            // If we set to next day's 00:00, adjust the date
+            if (nextLeveTime.getUTCHours() === 24) {
+                nextLeveTime.setUTCHours(0);
+                nextLeveTime.setUTCDate(nextLeveTime.getUTCDate() + 1);
+            }
+
+            const timeUntilNextLeve = (nextLeveTime - utcNow) / (1000 * 60 * 60);
+            const totalHours = timeUntilNextLeve + (cyclesNeeded - 1) * 12;
+            
+            const targetTime = new Date(now.getTime() + totalHours * 60 * 60 * 1000);
+
+            // Create localized date/time formatters with explicit timezone
+            const dateFormatter = new Intl.DateTimeFormat(navigator.language, {
+                year: 'numeric',
+                month: 'numeric',
+                day: 'numeric',
+                hour: 'numeric',
+                minute: 'numeric',
+                hour12: undefined,
+                timeZoneName: 'short'
+            });
+
+            // Format for next leve allowance
+            const nextLeveFormatter = new Intl.DateTimeFormat(navigator.language, {
+                hour: 'numeric',
+                minute: 'numeric',
+                hour12: undefined,
+                timeZoneName: 'short'
+            });
+
+            resultDiv.innerHTML = `
+                <h2>Leve Calculator Results</h2>
+                <div class="result-row">
+                    <span class="result-label">Current Leves:</span>
+                    <span class="result-value">${current}</span>
+                </div>
+                <div class="result-row">
+                    <span class="result-label">Target Leves:</span>
+                    <span class="result-value">${final}</span>
+                </div>
+                <div class="result-row">
+                    <span class="result-label">Leves Needed:</span>
+                    <span class="result-value">${levesNeeded}</span>
+                </div>
+                <div class="result-row">
+                    <span class="result-label">Next Allowance:</span>
+                    <span class="result-value">${nextLeveFormatter.format(nextLeveTime)}</span>
+                </div>
+                <div class="result-row">
+                    <span class="result-label">Target Date:</span>
+                    <span class="result-value">${dateFormatter.format(targetTime)}</span>
+                </div>
+                <div class="result-row">
+                    <span class="result-label">Time Until Target:</span>
+                    <span class="result-value">${getRelativeTimeString(targetTime)}</span>
+                </div>
+            `;
+            resultDiv.style.display = 'block';
+        }
+
+        function getRelativeTimeString(targetDate) {
+            const rtf = new Intl.RelativeTimeFormat('en', { numeric: 'auto' });
+            const now = new Date();
+            const diffInHours = Math.round((targetDate - now) / (1000 * 60 * 60));
+            
+            if (diffInHours < 24) {
+                return rtf.format(diffInHours, 'hour');
+            } else {
+                const diffInDays = Math.round(diffInHours / 24);
+                return rtf.format(diffInDays, 'day');
+            }
+        }
+
+        // Add this new function for theme toggling
+        function toggleTheme() {
+            const html = document.documentElement;
+            const themeToggle = document.querySelector('.theme-toggle i');
+            
+            if (html.getAttribute('data-theme') === 'dark') {
+                html.setAttribute('data-theme', 'light');
+                themeToggle.className = 'fas fa-moon';
+                localStorage.setItem('theme', 'light');
+            } else {
+                html.setAttribute('data-theme', 'dark');
+                themeToggle.className = 'fas fa-sun';
+                localStorage.setItem('theme', 'dark');
+            }
+        }
+
+        // Add this to load saved theme preference
+        document.addEventListener('DOMContentLoaded', () => {
+            const savedTheme = localStorage.getItem('theme') || 'dark';
+            const themeToggle = document.querySelector('.theme-toggle i');
+            
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            themeToggle.className = savedTheme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+        });
+    </script>
+</body>
+</html> 
